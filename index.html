@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Космическое послание твоему сердцу</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Pacifico&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow-x: hidden;
+            height: 100vh;
+            perspective: 1000px;
+        }
+        
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        #rocket {
+            width: 80px;
+            height: 120px;
+            margin-bottom: 30px;
+            position: relative;
+            animation: float 2s ease-in-out infinite;
+        }
+        
+        #flame {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 50px;
+            background: linear-gradient(to top, #ff4500, #ff8c00, #ffd700);
+            border-radius: 50% 50% 20% 20%;
+            filter: blur(5px);
+            animation: flicker 0.5s infinite alternate;
+        }
+        
+        #progress-container {
+            width: 200px;
+            height: 20px;
+            border: 2px solid #4d4dff;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #ff00cc, #ff0066);
+            transition: width 0.5s ease;
+        }
+        
+        #progress-text {
+            margin-top: 15px;
+            color: #4d4dff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        #main-screen {
+            display: none;
+            padding: 20px;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0f0c29, #302b63, #24243e);
+        }
+        
+        .control-panel {
+            border: 2px solid #4d4dff;
+            border-radius: 15px;
+            padding: 20px;
+            background: rgba(0, 0, 30, 0.7);
+            box-shadow: 0 0 20px rgba(77, 77, 255, 0.5);
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #4d4dff;
+            padding-bottom: 10px;
+        }
+        
+        .panel-title {
+            color: #4d4dff;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .status-light {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+            animation: pulse 1s infinite alternate;
+        }
+        
+        .monitor {
+            background: #000;
+            border: 1px solid #4d4dff;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 150px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .monitor::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 100% 2px;
+            pointer-events: none;
+        }
+        
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(0, 255, 255, 0.3);
+            animation: scan 8s linear infinite;
+        }
+        
+        .button {
+            background: linear-gradient(to bottom, #4d4dff, #3333cc);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button:hover {
+            background: linear-gradient(to bottom, #6666ff, #4d4dff);
+            box-shadow: 0 0 15px rgba(77, 77, 255, 0.7);
+        }
+        
+        .button:active {
+            transform: translateY(2px);
+        }
+        
+        .button::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+            transition: all 0.3s;
+        }
+        
+        .button:hover::after {
+            left: 100%;
+        }
+        
+        #message-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1001;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .constellation {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin: 30px auto;
+        }
+        
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 5px white;
+        }
+        
+        .line {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            transform-origin: left center;
+        }
+        
+        .love-letter {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s;
+        }
+        
+        .love-letter p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 18px;
+        }
+        
+        .signature {
+            font-family: 'Pacifico', cursive;
+            font-size: 24px;
+            margin-top: 30px;
+            color: #ff6b6b;
+        }
+        
+        #final-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1002;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        #supernova {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            position: absolute;
+            animation: supernova 3s forwards;
+        }
+        
+        #love-text {
+            font-size: 48px;
+            font-weight: bold;
+            color: transparent;
+            background: linear-gradient(to right, #ff00cc, #ff0066, #ff0033);
+            -webkit-background-clip: text;
+            background-clip: text;
+            margin-top: 30px;
+            opacity: 0;
+            transform: scale(0.5);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+        
+        #accept-button {
+            margin-top: 40px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 1; transform: translateX(-50%) scaleY(1); }
+            100% { opacity: 0.7; transform: translateX(-50%) scaleY(1.2); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        @keyframes supernova {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            50% { transform: scale(50); opacity: 0.8; box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+            100% { transform: scale(100); opacity: 0; box-shadow: 0 0 0 100px rgba(255, 255, 255, 0); }
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #4d4dff }
+        }
+        
+        .typing-text {
+            overflow: hidden;
+            border-right: 3px solid #4d4dff;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Загрузочный экран -->
+    <div id="loading-screen">
+        <div id="rocket">
+            <svg viewBox="0 0 24 24" fill="white">
+                <path d="M12,2.5c0,0,4.5,2.04,4.5,10.5c0,2.49-1.04,5.57-1.6,7H9.1c-0.56-1.43-1.6-4.51-1.6-7C7.5,4.54,12,2.5,12,2.5z M13,15.5 c0.28-0.55,0.42-1.21,0.5-2h-3c0.08,0.79,0.22,1.45,0.5,2H13z M12,6.5c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,6.5,12,6.5z M17,15.5c-0.07-1.25-0.22-2.22-0.39-3h2.39V15.5z M5,12.5h2.39c-0.17,0.78-0.32,1.75-0.39,3H5V12.5z"/>
+            </svg>
+            <div id="flame"></div>
+        </div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="progress-text">Инициализация чувств...</div>
+    </div>
+    
+    <!-- Основной экран управления -->
+    <div id="main-screen">
+        <div class="control-panel">
+            <div class="panel-header">
+                <div class="panel-title">Панель управления сердцем</div>
+                <div class="status-light"></div>
+            </div>
+            <div class="monitor">
+                <div class="scanline"></div>
+                <div id="monitor-text"></div>
+            </div>
+            <button id="activate-button" class="button">Активировать протокол признания</button>
+        </div>
+    </div>
+    
+    <!-- Экран с посланием -->
+    <div id="message-screen">
+        <div class="constellation" id="constellation"></div>
+        <div class="love-letter">
+            <p>Моё сердце обнаружило аномалию в твоём секторе.</p>
+            <p>После тщательного анализа всех параметров,</p>
+            <p>система пришла к однозначному выводу:</p>
+            <p>это любовь космических масштабов.</p>
+            <p>Каждый момент с тобой - как новая звезда на моём небосклоне.</p>
+            <p>Ты - мой самый удивительный космический феномен.</p>
+            <div class="signature">Твой космический спутник</div>
+        </div>
+    </div>
+    
+    <!-- Финальный экран -->
+    <div id="final-screen">
+        <div id="supernova"></div>
+        <div id="love-text">Я люблю тебя</div>
+        <button id="accept-button" class="button">Принять любовь</button>
+    </div>
+    
+    <script>
+        // Загрузочный экран
+        let progress = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const loadingScreen = document.getElementById('loading-screen');
+        const mainScreen = document.getElementById('main-screen');
+        
+        const loadingMessages = [
+            "Загрузка эмоций...",
+            "Инициализация сердечного ритма...",
+            "Калибровка чувств...",
+            "Подготовка признания...",
+            "Запуск ракеты любви..."
+        ];
+        
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress > 100) progress = 100;
+            progressBar.style.width = `${progress}%`;
+            
+            if (progress % 20 < 5) {
+                progressText.textContent = loadingMessages[Math.floor(progress / 20)];
+            }
+            
+            if (progress === 100) {
+                clearInterval(progressInterval);
+                setTimeout(() => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        mainScreen.style.display = 'block';
+                        startMainScreen();
+                    }, 1000);
+                }, 500);
+            }
+        }, 300);
+        
+        // Основной экран
+        function startMainScreen() {
+            const monitorText = document.getElementById('monitor-text');
+            const activateButton = document.getElementById('activate-button');
+            const messageScreen = document.getElementById('message-screen');
+            
+            const messages = [
+                "> Запуск системы мониторинга... УСПЕШНО",
+                "> Сканирование эмоционального спектра...",
+                "> Обнаружена аномалия в секторе сердца",
+                "> Анализ данных...",
+                "> Интенсивность чувств: КРИТИЧЕСКАЯ",
+                "> Рекомендуется активация протокола признания"
+            ];
+            
+            let currentMessage = 0;
+            const typingInterval = setInterval(() => {
+                if (currentMessage < messages.length) {
+                    monitorText.innerHTML += `<div>${messages[currentMessage]}</div>`;
+                    currentMessage++;
+                } else {
+                    clearInterval(typingInterval);
+                    activateButton.style.display = 'block';
+                }
+            }, 1500);
+            
+            activateButton.addEventListener('click', () => {
+                mainScreen.style.opacity = '0';
+                setTimeout(() => {
+                    mainScreen.style.display = 'none';
+                    messageScreen.style.display = 'flex';
+                    showConstellation();
+                }, 1000);
+            });
+        }
+        
+        // Создание созвездия
+        function showConstellation() {
+            const constellation = document.getElementById('constellation');
+            const stars = [];
+            const starCount = 30;
+            
+            // Создаем звезды
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.transform = `scale(${Math.random() * 0.5 + 0.5})`;
+                star.style.opacity = Math.random() * 0.5 + 0.5;
+                constellation.appendChild(star);
+                stars.push(star);
+                
+                // Анимация мерцания
+                setInterval(() => {
+                    star.style.opacity = Math.random() * 0.5 + 0.3;
+                }, Math.random() * 2000 + 1000);
+            }
+            
+            // Создаем линии между звездами (сердце)
+            setTimeout(() => {
+                const heartPoints = [
+                    [50, 20], [30, 40], [20, 60], [30, 80], [50, 90],
+                    [70, 80], [80, 60], [70, 40], [50, 20]
+                ];
+                
+                for (let i = 0; i < heartPoints.length - 1; i++) {
+                    const x1 = heartPoints[i][0];
+                    const y1 = heartPoints[i][1];
+                    const x2 = heartPoints[i+1][0];
+                    const y2 = heartPoints[i+1][1];
+                    
+                    const line = document.createElement('div');
+                    line.className = 'line';
+                    line.style.left = `${x1}%`;
+                    line.style.top = `${y1}%`;
+                    
+                    const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                    
+                    line.style.width = `${length}%`;
+                    line.style.transform = `rotate(${angle}deg)`;
+                    line.style.opacity = '0';
+                    
+                    constellation.appendChild(line);
+                    
+                    // Анимация появления линий
+                    setTimeout(() => {
+                        line.style.transition = 'opacity 1s';
+                        line.style.opacity = '1';
+                    }, i * 300);
+                }
+                
+                // Показываем письмо
+                setTimeout(() => {
+                    document.querySelector('.love-letter').style.opacity = '1';
+                    document.querySelector('.love-letter').style.transform = 'translateY(0)';
+                    
+                    // Переход к финальному экрану
+                    setTimeout(() => {
+                        messageScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            messageScreen.style.display = 'none';
+                            showFinalScreen();
+                        }, 1000);
+                    }, 10000);
+                }, heartPoints.length * 300 + 500);
+            }, 1000);
+        }
+        
+        // Финальный экран
+        function showFinalScreen() {
+            const finalScreen = document.getElementById('final-screen');
+            const supernova = document.getElementById('supernova');
+            const loveText = document.getElementById('love-text');
+            const acceptButton = document.getElementById('accept-button');
+            
+            finalScreen.style.display = 'flex';
+            
+            setTimeout(() => {
+                supernova.style.animation = 'supernova 3s forwards';
+                
+                setTimeout(() => {
+                    loveText.style.opacity = '1';
+                    loveText.style.transform = 'scale(1)';
+                    loveText.style.transition = 'all 1s';
+                    
+                    setTimeout(() => {
+                        acceptButton.style.opacity = '1';
+                        
+                        // Делаем кнопку "убегающей"
+                        acceptButton.addEventListener('mouseover', () => {
+                            const x = Math.random() * (window.innerWidth - 200);
+                            const y = Math.random() * (window.innerHeight - 100);
+                            acceptButton.style.position = 'absolute';
+                            acceptButton.style.left = `${x}px`;
+                            acceptButton.style.top = `${y}px`;
+                        });
+                        
+                        acceptButton.addEventListener('click', () => {
+                            alert('Любовь принята! ❤️');
+                        });
+                    }, 1000);
+                }, 3000);
+            }, 500);
+        }
+    </script>
+</body>
+</html>
